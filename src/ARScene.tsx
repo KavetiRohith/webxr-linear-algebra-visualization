@@ -35,7 +35,26 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
   objects: [],
   selectedObjectId: null,
 
-  addLine: (position = new Vector3(0, 1, 0), rotation = new Euler()) => {
+  // Update the addLine function in useLinePlaneStore
+  addLine: (position?: Vector3, rotation?: Euler) => {
+    // If no position is provided, create a random one
+    if (!position) {
+      position = new Vector3(
+        Math.random() * 2 - 1, // x between -1 and 1
+        Math.random() * 1.5, // y between 0 and 1.5
+        Math.random() * 2 - 1, // z between -1 and 1
+      );
+    }
+
+    // If no rotation is provided, create a random one
+    if (!rotation) {
+      rotation = new Euler(
+        Math.random() * Math.PI * 2, // random rotation around x
+        Math.random() * Math.PI * 2, // random rotation around y
+        Math.random() * Math.PI * 2, // random rotation around z
+      );
+    }
+
     const id = generateUUID();
     const line = {
       id,
@@ -55,7 +74,26 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
     get().updateEquation(id);
   },
 
-  addPlane: (position = new Vector3(0, 1, 0), rotation = new Euler()) => {
+  // Update the addPlane function in useLinePlaneStore
+  addPlane: (position?: Vector3, rotation?: Euler) => {
+    // If no position is provided, create a random one
+    if (!position) {
+      position = new Vector3(
+        Math.random() * 2 - 1, // x between -1 and 1
+        Math.random() * 1.5, // y between 0 and 1.5
+        Math.random() * 2 - 1, // z between -1 and 1
+      );
+    }
+
+    // If no rotation is provided, create a random one
+    if (!rotation) {
+      rotation = new Euler(
+        Math.random() * Math.PI * 2, // random rotation around x
+        Math.random() * Math.PI * 2, // random rotation around y
+        Math.random() * Math.PI * 2, // random rotation around z
+      );
+    }
+
     const id = generateUUID();
     const plane = {
       id,
@@ -229,7 +267,7 @@ const MathLine = ({
     }
 
     // Handle dragging logic with controller
-    if (isDragging && controllers.length > 0) {
+    if (isDragging && controllers && controllers.length > 0) {
       const controller = controllers[0];
       const controllerPos = new Vector3().setFromMatrixPosition(
         controller.controller.matrixWorld,
@@ -327,7 +365,7 @@ const MathPlane = ({
     }
 
     // Handle dragging logic with controller
-    if (isDragging && controllers.length > 0) {
+    if (isDragging && controllers && controllers.length > 0) {
       const controller = controllers[0];
       const controllerPos = new Vector3().setFromMatrixPosition(
         controller.controller.matrixWorld,
@@ -408,7 +446,6 @@ const ControlPanel = () => {
     removeObject,
     toggleVisibility,
   } = useLinePlaneStore();
-  const { isPresenting, controllers } = useXR();
   const groupRef = useRef<Group>(null);
 
   // Position the control panel relative to the user
@@ -490,7 +527,7 @@ const ControlPanel = () => {
 // Main AR Scene component
 export const ARScene = () => {
   const { objects, selectedObjectId } = useLinePlaneStore();
-  const { isPresenting, controllers } = useXR();
+  const { isPresenting } = useXR();
   const sceneRef = useRef<Group>(null);
   const { camera } = useThree();
 
@@ -509,14 +546,10 @@ export const ARScene = () => {
   useEffect(() => {
     if (objects.length === 0) {
       // Add a sample line
-      useLinePlaneStore
-        .getState()
-        .addLine(new Vector3(0, 0, 0), new Euler(0, 0, 0));
+      useLinePlaneStore.getState().addLine();
 
       // Add a sample plane
-      useLinePlaneStore
-        .getState()
-        .addPlane(new Vector3(0, 0.5, 0), new Euler(Math.PI / 4, 0, 0));
+      useLinePlaneStore.getState().addPlane();
     }
   }, [objects.length]);
 

@@ -21,7 +21,7 @@ export const DragControls = () => {
   const raycaster = useRef(new Raycaster());
 
   useFrame(() => {
-    if (!isDragging || !selectedObjectId || !controllers.length) return;
+    if (!isDragging || !selectedObjectId || !controllers || !controllers.length) return;
 
     const controller = controllers[0];
     const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
