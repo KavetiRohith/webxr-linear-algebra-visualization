@@ -72,14 +72,15 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
   removeObject: (id) => {
     set((state) => ({
       objects: state.objects.filter((obj) => obj.id !== id),
-      selectedObjectId: state.selectedObjectId === id ? null : state.selectedObjectId,
+      selectedObjectId:
+        state.selectedObjectId === id ? null : state.selectedObjectId,
     }));
   },
 
   updateObjectPosition: (id, position) => {
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, position: position.clone() } : obj
+        obj.id === id ? { ...obj, position: position.clone() } : obj,
       ),
     }));
     get().updateEquation(id);
@@ -88,14 +89,14 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
   updateObjectRotation: (id, rotation) => {
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, rotation: rotation.clone() } : obj
+        obj.id === id ? { ...obj, rotation: rotation.clone() } : obj,
       ),
     }));
     get().updateEquation(id);
   },
 
   updateEquation: (id) => {
-    const object = get().objects.find(obj => obj.id === id);
+    const object = get().objects.find((obj) => obj.id === id);
     if (!object) return;
 
     // Calculate equation based on position and rotation
@@ -104,12 +105,16 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
     if (object.type === "line") {
       // Line equation: Point-direction form
       // x = origin + t * direction
-      const direction = new Vector3(1, 0, 0).applyEuler(object.rotation).normalize();
+      const direction = new Vector3(1, 0, 0)
+        .applyEuler(object.rotation)
+        .normalize();
       equation = `x = (${object.position.x.toFixed(1)}, ${object.position.y.toFixed(1)}, ${object.position.z.toFixed(1)}) + t·(${direction.x.toFixed(1)}, ${direction.y.toFixed(1)}, ${direction.z.toFixed(1)})`;
     } else {
       // Plane equation: ax + by + cz + d = 0
       // Normal vector is the z-axis transformed by rotation
-      const normal = new Vector3(0, 0, 1).applyEuler(object.rotation).normalize();
+      const normal = new Vector3(0, 0, 1)
+        .applyEuler(object.rotation)
+        .normalize();
       const d = -normal.dot(object.position);
 
       equation = `${normal.x.toFixed(2)}x + ${normal.y.toFixed(2)}y + ${normal.z.toFixed(2)}z + ${d.toFixed(2)} = 0`;
@@ -117,7 +122,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
 
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, equation } : obj
+        obj.id === id ? { ...obj, equation } : obj,
       ),
     }));
   },
@@ -129,7 +134,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
   toggleVisibility: (id) => {
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, visible: !obj.visible } : obj
+        obj.id === id ? { ...obj, visible: !obj.visible } : obj,
       ),
     }));
   },

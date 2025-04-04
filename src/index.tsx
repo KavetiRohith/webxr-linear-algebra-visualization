@@ -8,7 +8,7 @@ import { ARScene } from "./ARScene";
 const xrStore = createXRStore({
   // Enable AR mode for Meta Quest
   mode: "AR",
-  referenceSpace: "local-floor"
+  referenceSpace: "local-floor",
 });
 
 // Create a wrapper component for XR content
@@ -55,9 +55,7 @@ const App = () => {
         }}
       >
         <div>
-          <div style={{ paddingTop: "10px" }}>
-            Linear Algebra AR Visualizer
-          </div>
+          <div style={{ paddingTop: "10px" }}>Linear Algebra AR Visualizer</div>
         </div>
         <button
           onClick={() => xrStore.enterAR()}
@@ -77,5 +75,5 @@ const App = () => {
 };
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <App />
+  <App />,
 );
