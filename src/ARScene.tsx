@@ -41,7 +41,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
       position = new Vector3(
         Math.random() * 2 - 1, // x between -1 and 1
         Math.random() * 1.5, // y between 0 and 1.5
-        Math.random() * 2 - 1 // z between -1 and 1
+        Math.random() * 2 - 1, // z between -1 and 1
       );
     }
 
@@ -50,7 +50,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
       rotation = new Euler(
         Math.random() * Math.PI * 2, // random rotation around x
         Math.random() * Math.PI * 2, // random rotation around y
-        Math.random() * Math.PI * 2 // random rotation around z
+        Math.random() * Math.PI * 2, // random rotation around z
       );
     }
 
@@ -79,7 +79,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
       position = new Vector3(
         Math.random() * 2 - 1, // x between -1 and 1
         Math.random() * 1.5, // y between 0 and 1.5
-        Math.random() * 2 - 1 // z between -1 and 1
+        Math.random() * 2 - 1, // z between -1 and 1
       );
     }
 
@@ -88,7 +88,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
       rotation = new Euler(
         Math.random() * Math.PI * 2, // random rotation around x
         Math.random() * Math.PI * 2, // random rotation around y
-        Math.random() * Math.PI * 2 // random rotation around z
+        Math.random() * Math.PI * 2, // random rotation around z
       );
     }
 
@@ -122,7 +122,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
   updateObjectPosition: (id, position) => {
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, position: position.clone() } : obj
+        obj.id === id ? { ...obj, position: position.clone() } : obj,
       ),
     }));
     get().updateEquation(id);
@@ -131,7 +131,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
   updateObjectRotation: (id, rotation) => {
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, rotation: rotation.clone() } : obj
+        obj.id === id ? { ...obj, rotation: rotation.clone() } : obj,
       ),
     }));
     get().updateEquation(id);
@@ -164,7 +164,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
 
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, equation } : obj
+        obj.id === id ? { ...obj, equation } : obj,
       ),
     }));
   },
@@ -176,7 +176,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
   toggleVisibility: (id) => {
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, visible: !obj.visible } : obj
+        obj.id === id ? { ...obj, visible: !obj.visible } : obj,
       ),
     }));
   },
@@ -401,10 +401,10 @@ const ControlPanel = () => {
     if (groupRef.current) {
       // Position panel in front of the user, following their view
       const cameraPosition = new Vector3().setFromMatrixPosition(
-        camera.matrixWorld
+        camera.matrixWorld,
       );
       const cameraDirection = new Vector3(0, 0, -1).applyQuaternion(
-        camera.quaternion
+        camera.quaternion,
       );
 
       const panelPosition = cameraPosition
@@ -484,7 +484,7 @@ export const ARScene = () => {
     if (isPresenting && sceneRef.current) {
       // Position origin at a comfortable distance in front
       const position = new Vector3(0, -0.5, -1).applyMatrix4(
-        camera.matrixWorld
+        camera.matrixWorld,
       );
       sceneRef.current.position.copy(position);
     }
@@ -529,7 +529,7 @@ export const ARScene = () => {
                 />
               )}
             </group>
-          )
+          ),
       )}
 
       {/* Control panel for creating and managing objects */}
