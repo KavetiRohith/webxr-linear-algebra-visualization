@@ -11,15 +11,6 @@ const xrStore = createXRStore({
   referenceSpace: "local-floor",
 });
 
-// Create a wrapper component for XR content
-const XRContent = () => {
-  return (
-    <>
-      <ARScene />
-    </>
-  );
-};
-
 const App = () => {
   return (
     <>
@@ -35,13 +26,14 @@ const App = () => {
         <ambientLight intensity={0.5} />
         <directionalLight position={[5, 5, 5]} intensity={1} />
 
-        {/* XR context with controllers */}
+        {/* XR controllers and hands */}
         <XR store={xrStore}>
-          <XRContent />
+          {/* Main AR Scene with grid, origin, lines, and planes */}
+          <ARScene />
         </XR>
       </Canvas>
 
-      {/* UI for non-VR mode and enter button */}
+      {/* UI for non-AR mode and enter button */}
       <div
         style={{
           position: "fixed",

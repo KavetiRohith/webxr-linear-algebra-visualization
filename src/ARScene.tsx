@@ -1,8 +1,8 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import { Text, Line } from "@react-three/drei";
 import { useXR, Interactive } from "@react-three/xr";
-import { Vector3, Group, Euler, Matrix4 } from "three";
+import { Vector3, Group, Euler, Mesh } from "three";
 import { create } from "zustand";
 import { generateUUID } from "three/src/math/MathUtils";
 
@@ -35,14 +35,13 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
   objects: [],
   selectedObjectId: null,
 
-  // Update the addLine function in useLinePlaneStore
   addLine: (position?: Vector3, rotation?: Euler) => {
     // If no position is provided, create a random one
     if (!position) {
       position = new Vector3(
         Math.random() * 2 - 1, // x between -1 and 1
         Math.random() * 1.5, // y between 0 and 1.5
-        Math.random() * 2 - 1, // z between -1 and 1
+        Math.random() * 2 - 1 // z between -1 and 1
       );
     }
 
@@ -51,7 +50,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
       rotation = new Euler(
         Math.random() * Math.PI * 2, // random rotation around x
         Math.random() * Math.PI * 2, // random rotation around y
-        Math.random() * Math.PI * 2, // random rotation around z
+        Math.random() * Math.PI * 2 // random rotation around z
       );
     }
 
@@ -74,14 +73,13 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
     get().updateEquation(id);
   },
 
-  // Update the addPlane function in useLinePlaneStore
   addPlane: (position?: Vector3, rotation?: Euler) => {
     // If no position is provided, create a random one
     if (!position) {
       position = new Vector3(
         Math.random() * 2 - 1, // x between -1 and 1
         Math.random() * 1.5, // y between 0 and 1.5
-        Math.random() * 2 - 1, // z between -1 and 1
+        Math.random() * 2 - 1 // z between -1 and 1
       );
     }
 
@@ -90,7 +88,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
       rotation = new Euler(
         Math.random() * Math.PI * 2, // random rotation around x
         Math.random() * Math.PI * 2, // random rotation around y
-        Math.random() * Math.PI * 2, // random rotation around z
+        Math.random() * Math.PI * 2 // random rotation around z
       );
     }
 
@@ -124,7 +122,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
   updateObjectPosition: (id, position) => {
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, position: position.clone() } : obj,
+        obj.id === id ? { ...obj, position: position.clone() } : obj
       ),
     }));
     get().updateEquation(id);
@@ -133,7 +131,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
   updateObjectRotation: (id, rotation) => {
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, rotation: rotation.clone() } : obj,
+        obj.id === id ? { ...obj, rotation: rotation.clone() } : obj
       ),
     }));
     get().updateEquation(id);
@@ -166,7 +164,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
 
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, equation } : obj,
+        obj.id === id ? { ...obj, equation } : obj
       ),
     }));
   },
@@ -178,7 +176,7 @@ export const useLinePlaneStore = create<LinePlaneStoreState>((set, get) => ({
   toggleVisibility: (id) => {
     set((state) => ({
       objects: state.objects.map((obj) =>
-        obj.id === id ? { ...obj, visible: !obj.visible } : obj,
+        obj.id === id ? { ...obj, visible: !obj.visible } : obj
       ),
     }));
   },
@@ -253,90 +251,65 @@ const MathLine = ({
   color: string;
   isSelected: boolean;
 }) => {
-  const { updateObjectPosition, updateObjectRotation, selectObject } =
-    useLinePlaneStore();
-  const groupRef = useRef<Group>(null);
-  const { controllers } = useXR();
-  const [isDragging, setIsDragging] = useState(false);
-
-  // Update position and rotation from store
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.position.copy(position);
-      groupRef.current.rotation.copy(rotation);
-    }
-
-    // Handle dragging logic with controller
-    if (isDragging && controllers && controllers.length > 0) {
-      const controller = controllers[0];
-      const controllerPos = new Vector3().setFromMatrixPosition(
-        controller.controller.matrixWorld,
-      );
-      updateObjectPosition(id, controllerPos);
-    }
-  });
+  const { updateObjectPosition, selectObject } = useLinePlaneStore();
+  const meshRef = useRef<Mesh>(null);
+  const isDraggingRef = useRef(false);
 
   const handleSelect = () => {
     selectObject(id);
   };
 
-  const handleSelectStart = () => {
-    if (isSelected) {
-      setIsDragging(true);
-    }
-  };
-
-  const handleSelectEnd = () => {
-    setIsDragging(false);
-  };
-
   return (
-    <Interactive
-      onSelect={handleSelect}
-      onSelectStart={handleSelectStart}
-      onSelectEnd={handleSelectEnd}
-    >
-      <group ref={groupRef}>
-        {/* Line representation */}
-        <mesh>
-          <cylinderGeometry args={[0.01, 0.01, 2, 8]} />
-          <meshStandardMaterial
-            color={color}
-            opacity={isSelected ? 0.8 : 0.5}
-            transparent
-          />
-        </mesh>
+    <group position={position} rotation={rotation}>
+      {/* Line representation */}
+      <mesh
+        onPointerDown={(e) => {
+          if (isSelected && !isDraggingRef.current) {
+            e.stopPropagation();
+            isDraggingRef.current = true;
+          }
+        }}
+        onPointerMove={(e) => {
+          if (isSelected && isDraggingRef.current) {
+            e.stopPropagation();
+            updateObjectPosition(id, e.point);
+          }
+        }}
+        onPointerUp={() => {
+          isDraggingRef.current = false;
+        }}
+        onPointerLeave={() => {
+          isDraggingRef.current = false;
+        }}
+        onClick={handleSelect}
+        ref={meshRef}
+      >
+        <cylinderGeometry args={[0.01, 0.01, 2, 8]} />
+        <meshStandardMaterial
+          color={color}
+          opacity={isSelected ? 0.8 : 0.5}
+          transparent
+        />
+      </mesh>
 
-        {/* Handle for moving */}
-        <mesh position={[0, 0, 0]}>
-          <sphereGeometry args={[0.03]} />
-          <meshStandardMaterial color={isSelected ? "#ffffff" : color} />
-        </mesh>
-
-        {/* Handle for rotating */}
-        <mesh position={[0.5, 0, 0]}>
-          <boxGeometry args={[0.05, 0.05, 0.05]} />
-          <meshStandardMaterial color={isSelected ? "#ffff00" : color} />
-        </mesh>
-
-        {/* Display equation */}
-        <Text
-          position={[0, 0.1, 0]}
-          fontSize={0.05}
-          color="white"
-          anchorX="center"
-          anchorY="bottom"
-          backgroundColor={isSelected ? "#00000080" : undefined}
-          padding={0.01}
-        >
-          {useLinePlaneStore.getState().objects.find((obj) => obj.id === id)
-            ?.equation || ""}
-        </Text>
-      </group>
-    </Interactive>
+      {/* Display equation */}
+      <Text
+        position={[0, 0.1, 0]}
+        fontSize={0.05}
+        color="white"
+        anchorX="center"
+        anchorY="bottom"
+        backgroundColor={isSelected ? "#00000080" : undefined}
+        padding={0.01}
+      >
+        {useLinePlaneStore.getState().objects.find((obj) => obj.id === id)
+          ?.equation || ""}
+      </Text>
+    </group>
   );
 };
 
+// Component for an interactive 3D plane
 // Component for an interactive 3D plane
 const MathPlane = ({
   id,
@@ -351,88 +324,62 @@ const MathPlane = ({
   color: string;
   isSelected: boolean;
 }) => {
-  const { updateObjectPosition, updateObjectRotation, selectObject } =
-    useLinePlaneStore();
-  const groupRef = useRef<Group>(null);
-  const { controllers } = useXR();
-  const [isDragging, setIsDragging] = useState(false);
-
-  // Update position and rotation from store
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.position.copy(position);
-      groupRef.current.rotation.copy(rotation);
-    }
-
-    // Handle dragging logic with controller
-    if (isDragging && controllers && controllers.length > 0) {
-      const controller = controllers[0];
-      const controllerPos = new Vector3().setFromMatrixPosition(
-        controller.controller.matrixWorld,
-      );
-      updateObjectPosition(id, controllerPos);
-    }
-  });
+  const { updateObjectPosition, selectObject } = useLinePlaneStore();
+  const meshRef = useRef<Mesh>(null);
+  const isDraggingRef = useRef(false);
 
   const handleSelect = () => {
     selectObject(id);
   };
 
-  const handleSelectStart = () => {
-    if (isSelected) {
-      setIsDragging(true);
-    }
-  };
-
-  const handleSelectEnd = () => {
-    setIsDragging(false);
-  };
-
   return (
-    <Interactive
-      onSelect={handleSelect}
-      onSelectStart={handleSelectStart}
-      onSelectEnd={handleSelectEnd}
-    >
-      <group ref={groupRef}>
-        {/* Plane representation */}
-        <mesh>
-          <planeGeometry args={[1, 1]} />
-          <meshStandardMaterial
-            color={color}
-            opacity={isSelected ? 0.7 : 0.4}
-            transparent
-            side={2} // DoubleSide
-          />
-        </mesh>
+    <group position={position} rotation={rotation}>
+      {/* Plane representation */}
+      <mesh
+        onPointerDown={(e) => {
+          if (isSelected && !isDraggingRef.current) {
+            e.stopPropagation();
+            isDraggingRef.current = true;
+          }
+        }}
+        onPointerMove={(e) => {
+          if (isSelected && isDraggingRef.current) {
+            e.stopPropagation();
+            updateObjectPosition(id, e.point);
+          }
+        }}
+        onPointerUp={() => {
+          isDraggingRef.current = false;
+        }}
+        onPointerLeave={() => {
+          isDraggingRef.current = false;
+        }}
+        onClick={handleSelect}
+        ref={meshRef}
+      >
+        <planeGeometry args={[1, 1]} />
+        <meshStandardMaterial
+          color={color}
+          opacity={isSelected ? 0.7 : 0.4}
+          transparent
+          side={2} // DoubleSide
+        />
+      </mesh>
 
-        {/* Handle for moving */}
-        <mesh position={[0, 0, 0]}>
-          <sphereGeometry args={[0.03]} />
-          <meshStandardMaterial color={isSelected ? "#ffffff" : color} />
-        </mesh>
-
-        {/* Handle for rotating */}
-        <mesh position={[0.4, 0.4, 0]}>
-          <boxGeometry args={[0.05, 0.05, 0.05]} />
-          <meshStandardMaterial color={isSelected ? "#ffff00" : color} />
-        </mesh>
-
-        {/* Display equation */}
-        <Text
-          position={[0, 0.1, 0]}
-          fontSize={0.05}
-          color="white"
-          anchorX="center"
-          anchorY="bottom"
-          backgroundColor={isSelected ? "#00000080" : undefined}
-          padding={0.01}
-        >
-          {useLinePlaneStore.getState().objects.find((obj) => obj.id === id)
-            ?.equation || ""}
-        </Text>
-      </group>
-    </Interactive>
+      {/* Display equation */}
+      <Text
+        position={[0, 0.1, 0]}
+        fontSize={0.05}
+        color="white"
+        anchorX="center"
+        anchorY="bottom"
+        backgroundColor={isSelected ? "#00000080" : undefined}
+        padding={0.01}
+      >
+        {useLinePlaneStore.getState().objects.find((obj) => obj.id === id)
+          ?.equation || ""}
+      </Text>
+    </group>
   );
 };
 
@@ -446,6 +393,7 @@ const ControlPanel = () => {
     removeObject,
     toggleVisibility,
   } = useLinePlaneStore();
+  const { isPresenting } = useXR();
   const groupRef = useRef<Group>(null);
 
   // Position the control panel relative to the user
@@ -453,10 +401,10 @@ const ControlPanel = () => {
     if (groupRef.current) {
       // Position panel in front of the user, following their view
       const cameraPosition = new Vector3().setFromMatrixPosition(
-        camera.matrixWorld,
+        camera.matrixWorld
       );
       const cameraDirection = new Vector3(0, 0, -1).applyQuaternion(
-        camera.quaternion,
+        camera.quaternion
       );
 
       const panelPosition = cameraPosition
@@ -536,7 +484,7 @@ export const ARScene = () => {
     if (isPresenting && sceneRef.current) {
       // Position origin at a comfortable distance in front
       const position = new Vector3(0, -0.5, -1).applyMatrix4(
-        camera.matrixWorld,
+        camera.matrixWorld
       );
       sceneRef.current.position.copy(position);
     }
@@ -545,10 +493,10 @@ export const ARScene = () => {
   // Initialize with a line and plane as examples
   useEffect(() => {
     if (objects.length === 0) {
-      // Add a sample line
+      // Add a sample line with random position/rotation
       useLinePlaneStore.getState().addLine();
 
-      // Add a sample plane
+      // Add a sample plane with random position/rotation
       useLinePlaneStore.getState().addPlane();
     }
   }, [objects.length]);
@@ -581,7 +529,7 @@ export const ARScene = () => {
                 />
               )}
             </group>
-          ),
+          )
       )}
 
       {/* Control panel for creating and managing objects */}
