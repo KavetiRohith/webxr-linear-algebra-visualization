@@ -1,10 +1,10 @@
 import { useRef, useEffect } from "react";
-import { useThree, useFrame } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { Text, Line } from "@react-three/drei";
-import { useXR, Interactive } from "@react-three/xr";
+import { Interactive } from "@react-three/xr";
 import { Vector3, Group, Euler, Mesh } from "three";
 import { create } from "zustand";
-import { generateUUID } from "three/src/math/MathUtils";
+import { generateUUID } from "three/src/math/MathUtils.js";
 
 // Define MathObject type for our state management
 type MathObject = {
@@ -252,8 +252,11 @@ const MathLine = ({
   isSelected: boolean;
 }) => {
   const { updateObjectPosition, selectObject } = useLinePlaneStore();
-  const meshRef = useRef<Mesh>(null);
+  const lineRef = useRef<Mesh>(null);
+  const handleRef = useRef<Mesh>(null);
   const isDraggingRef = useRef(false);
+  const dragStartPointRef = useRef<Vector3 | null>(null);
+  const objectStartPositionRef = useRef<Vector3 | null>(null);
 
   const handleSelect = () => {
     selectObject(id);
@@ -262,32 +265,67 @@ const MathLine = ({
   return (
     <group position={position} rotation={rotation}>
       {/* Line representation */}
-      <mesh
-        onPointerDown={(e) => {
-          if (isSelected && !isDraggingRef.current) {
-            e.stopPropagation();
-            isDraggingRef.current = true;
-          }
-        }}
-        onPointerMove={(e) => {
-          if (isSelected && isDraggingRef.current) {
-            e.stopPropagation();
-            updateObjectPosition(id, e.point);
-          }
-        }}
-        onPointerUp={() => {
-          isDraggingRef.current = false;
-        }}
-        onPointerLeave={() => {
-          isDraggingRef.current = false;
-        }}
-        onClick={handleSelect}
-        ref={meshRef}
-      >
+      <mesh ref={lineRef} onClick={handleSelect}>
         <cylinderGeometry args={[0.01, 0.01, 2, 8]} />
         <meshStandardMaterial
           color={color}
           opacity={isSelected ? 0.8 : 0.5}
+          transparent
+        />
+      </mesh>
+
+      {/* Dedicated handle for selection and dragging */}
+      <mesh
+        ref={handleRef}
+        position={[0, 0, 0]}
+        onClick={handleSelect}
+        onPointerDown={(e) => {
+          if (isSelected && !isDraggingRef.current) {
+            e.stopPropagation();
+            isDraggingRef.current = true;
+            dragStartPointRef.current = e.point.clone();
+            objectStartPositionRef.current = position.clone();
+          }
+        }}
+        onPointerMove={(e) => {
+          if (
+            isSelected &&
+            isDraggingRef.current &&
+            dragStartPointRef.current &&
+            objectStartPositionRef.current
+          ) {
+            e.stopPropagation();
+
+            // Calculate the movement delta in world space
+            const dragDelta = new Vector3().subVectors(
+              e.point,
+              dragStartPointRef.current,
+            );
+
+            // Apply the delta to the original position
+            const newPosition = objectStartPositionRef.current
+              .clone()
+              .add(dragDelta);
+
+            // Update the object position
+            updateObjectPosition(id, newPosition);
+          }
+        }}
+        onPointerUp={() => {
+          isDraggingRef.current = false;
+          dragStartPointRef.current = null;
+          objectStartPositionRef.current = null;
+        }}
+        onPointerLeave={() => {
+          isDraggingRef.current = false;
+          dragStartPointRef.current = null;
+          objectStartPositionRef.current = null;
+        }}
+      >
+        <sphereGeometry args={[0.05]} />
+        <meshStandardMaterial
+          color={isSelected ? "#ffffff" : color}
+          opacity={0.8}
           transparent
         />
       </mesh>
@@ -309,7 +347,6 @@ const MathLine = ({
   );
 };
 
-// Component for an interactive 3D plane
 // Component for an interactive 3D plane
 const MathPlane = ({
   id,
@@ -385,15 +422,8 @@ const MathPlane = ({
 
 // Control panel for creating and managing objects
 const ControlPanel = () => {
-  const {
-    objects,
-    selectedObjectId,
-    addLine,
-    addPlane,
-    removeObject,
-    toggleVisibility,
-  } = useLinePlaneStore();
-  const { isPresenting } = useXR();
+  const { selectedObjectId, addLine, addPlane, removeObject } =
+    useLinePlaneStore();
   const groupRef = useRef<Group>(null);
 
   // Position the control panel relative to the user
@@ -475,20 +505,7 @@ const ControlPanel = () => {
 // Main AR Scene component
 export const ARScene = () => {
   const { objects, selectedObjectId } = useLinePlaneStore();
-  const { isPresenting } = useXR();
   const sceneRef = useRef<Group>(null);
-  const { camera } = useThree();
-
-  // Position the scene in front of the user when entering AR
-  useEffect(() => {
-    if (isPresenting && sceneRef.current) {
-      // Position origin at a comfortable distance in front
-      const position = new Vector3(0, -0.5, -1).applyMatrix4(
-        camera.matrixWorld,
-      );
-      sceneRef.current.position.copy(position);
-    }
-  }, [isPresenting, camera]);
 
   // Initialize with a line and plane as examples
   useEffect(() => {
